@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>🧠 DeepSeek Chat (Local)</title>
+    <style>
+      body {
+        font-family: Arial;
+        margin: 2rem;
+      }
+      textarea {
+        width: 100%;
+        height: 100px;
+      }
+      #responseBox {
+        margin-top: 1rem;
+        padding: 1rem;
+        background: #f4f4f4;
+        border-radius: 5px;
+      }
+      #responseBox div {
+        margin-top: 1rem;
+        white-space: pre-wrap;
+        line-height: 1.5;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>🧠 DeepSeek Chat (Local)</h1>
+    <form id="promptForm">
+      <textarea id="promptInput" placeholder="Ask me something..."></textarea
+      ><br />
+      <button type="submit">Send</button>
+    </form>
+    <h3>Response:</h3>
+    <div id="responseBox">No response received.</div>
+
+    <script>
+      const form = document.getElementById("promptForm");
+      const promptInput = document.getElementById("promptInput");
+      const responseBox = document.getElementById("responseBox");
+
+      form.onsubmit = async (e) => {
+        e.preventDefault();
+        const prompt = promptInput.value.trim();
+        if (!prompt) return;
+
+        responseBox.innerHTML = "<em>Loading...</em>";
+
+        try {
+          const res = await fetch("/generate", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ prompt }),
+          });
+          const data = await res.json();
+          const raw = data.response || "No response.";
+
+          const thinkMatch = raw.match(/<think>([\s\S]*?)<\/think>\s*(.*)/);
+          if (thinkMatch) {
+            const [, thinkContent, actualResponse] = thinkMatch;
+            responseBox.innerHTML = `
+                <div style="background:#e0e0e0; padding:1rem; border-left:5px solid #999; margin-bottom:1rem;">
+                  <strong>🧠 Thought:</strong><br>${thinkContent.trim()}
+                </div>
+                <div><strong>💬 Response:</strong><br>${actualResponse.trim()}</div>
+              `;
+          } else {
+            responseBox.textContent = raw;
+          }
+        } catch (err) {
+          console.error(err);
+          responseBox.textContent = "Error fetching response.";
+        }
+      };
+    </script>
+  </body>
+</html>
