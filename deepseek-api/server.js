@@ -26,9 +26,11 @@ app.post("/generate", async (req, res) => {
     });
 
     const data = await response.json();
+    console.log("Response:", data);
     res.json({ response: data.response });
   } catch (err) {
     console.error("Error:", err);
+    res.json({ response: data.response });
     res.status(500).json({ error: "Failed to fetch from model." });
   }
 });
